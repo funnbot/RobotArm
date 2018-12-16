@@ -6,30 +6,39 @@ using UnityEngine;
 public class ArmHinge : MonoBehaviour {
     public string keyRight = "o";
     public string keyLeft = "p";
+    public float speed = 1;
+    public Vector2 Bounds;
+    public Transform pivot;
 
     Rigidbody rb;
-    Transform origin;
+
+    Vector3 startOffset;
+    Quaternion startRot;
 
     float angle = 0f;
 
     void Start() {
         rb = GetComponent<Rigidbody>();
+        rb.isKinematic = true;
         rb.useGravity = false;
-        origin = transform.GetChild(0);
+        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+
+        startOffset = rb.transform.position - pivot.position;
+        startRot = rb.transform.rotation;
     }
 
-    void Update() {
+    void FixedUpdate() {
         if (Input.GetKey(keyRight)) {
-            angle = 1;
+            angle += speed;
         }
         if (Input.GetKey(keyLeft)) {
-            angle = -1;
+            angle += -speed;
         }
 
-        Quaternion q = Quaternion.AngleAxis(angle, rb.transform.right);
-        rb.MovePosition(q * (rb.transform.position - origin.position) + origin.position);
-        rb.MoveRotation(rb.transform.rotation * q);
+        angle = Mathf.Clamp(angle, Bounds.x, Bounds.y);
 
-        angle = 0;
+        Quaternion q = Quaternion.AngleAxis(angle, rb.transform.right);
+        rb.MovePosition(q * ((startOffset + pivot.position) - pivot.position) + pivot.position);
+        rb.MoveRotation(startRot * q);
     }
 }
